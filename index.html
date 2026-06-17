@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="theme-color" content="#C8102E"/>
+<title>Spendly</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#C8102E;--red-light:#FEF0F2;--red-mid:#F4A0A9;
+  --white:#FFFFFF;--surface:#F8F8F7;--surface-2:#EEEDE9;
+  --text:#111111;--text-muted:#666666;--text-hint:#AAAAAA;
+  --border:rgba(0,0,0,0.08);--border-strong:rgba(0,0,0,0.14);
+  --green:#0D9373;--green-light:#E6F7F3;
+  --amber:#B45309;--amber-light:#FEF3C7;
+  --blue:#1D4ED8;--blue-light:#EFF6FF;
+  --shadow-md:0 4px 20px rgba(0,0,0,0.09);
+  --radius-lg:16px;--radius-xl:22px;
+  --font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+}
+html,body{height:100%;font-family:var(--font);background:var(--surface);color:var(--text);font-size:15px;line-height:1.5}
+button{font-family:var(--font);cursor:pointer}
+a{color:var(--red);text-decoration:none}
+
+/* ── LANDING CHOICE SCREEN ── */
+#choice-screen{display:flex;min-height:100vh;align-items:center;justify-content:center;background:var(--surface);padding:1rem}
+.choice-wrap{width:100%;max-width:480px;text-align:center}
+.choice-brand{margin-bottom:2.5rem}
+.choice-brand .bmark{width:56px;height:56px;background:var(--red);border-radius:16px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:1rem;box-shadow:0 4px 16px rgba(200,16,46,.3)}
+.choice-brand .bmark svg{width:30px;height:30px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.choice-brand h1{font-size:28px;font-weight:800;letter-spacing:-.6px}
+.choice-brand p{font-size:14px;color:var(--text-muted);margin-top:6px}
+.choice-cards{display:flex;flex-direction:column;gap:14px}
+.choice-card{background:var(--white);border:1.5px solid var(--border-strong);border-radius:var(--radius-xl);padding:1.75rem;text-align:left;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:1rem}
+.choice-card:hover{border-color:var(--red);box-shadow:var(--shadow-md);transform:translateY(-1px)}
+.choice-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.choice-icon.individual{background:var(--blue-light)}
+.choice-icon.business{background:var(--green-light)}
+.choice-icon svg{width:24px;height:24px;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.choice-icon.individual svg{stroke:var(--blue)}
+.choice-icon.business svg{stroke:var(--green)}
+.choice-text h3{font-size:16px;font-weight:700;margin-bottom:3px}
+.choice-text p{font-size:13px;color:var(--text-muted)}
+.choice-arrow{margin-left:auto;color:var(--text-hint);flex-shrink:0}
+.choice-arrow svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+
+/* ── AUTH SCREENS (shared style) ── */
+.auth-screen{display:none;min-height:100vh;align-items:center;justify-content:center;background:var(--surface);padding:1rem}
+.auth-wrap{width:100%;max-width:420px}
+.auth-back{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-muted);margin-bottom:1.25rem;cursor:pointer;width:fit-content}
+.auth-back svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+.auth-back:hover{color:var(--text)}
+.auth-brand{text-align:center;margin-bottom:2rem}
+.auth-brand .bmark{width:52px;height:52px;border-radius:14px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:.75rem;box-shadow:0 4px 16px rgba(200,16,46,.3)}
+.auth-brand .bmark.biz{background:var(--green);box-shadow:0 4px 16px rgba(13,147,115,.3)}
+.auth-brand .bmark.ind{background:var(--red)}
+.auth-brand .bmark svg{width:28px;height:28px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.auth-brand h1{font-size:24px;font-weight:800;letter-spacing:-.5px}
+.auth-brand p{font-size:14px;color:var(--text-muted);margin-top:4px}
+.auth-card{background:var(--white);border-radius:var(--radius-xl);border:.5px solid var(--border-strong);padding:2rem;box-shadow:var(--shadow-md)}
+.auth-tabs{display:flex;border:.5px solid var(--border-strong);border-radius:10px;overflow:hidden;margin-bottom:1.5rem}
+.auth-tab{flex:1;padding:9px;text-align:center;font-size:14px;font-weight:500;cursor:pointer;background:var(--surface);color:var(--text-muted);border:none;transition:all .15s}
+.auth-tab.active{background:var(--white);color:var(--red);font-weight:700}
+.auth-tab.active.biz-active{color:var(--green)}
+.field{margin-bottom:1rem}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+.field input{width:100%;padding:10px 13px;border:.5px solid var(--border-strong);border-radius:9px;font-size:14px;background:var(--surface);color:var(--text);outline:none;transition:border .15s;font-family:var(--font)}
+.field input:focus{border-color:var(--red);background:var(--white)}
+.field .hint{font-size:11px;color:var(--text-hint);margin-top:4px}
+.btn-primary{width:100%;padding:11px;background:var(--red);color:#fff;border:none;border-radius:9px;font-size:15px;font-weight:700;cursor:pointer;transition:opacity .15s}
+.btn-primary.biz{background:var(--green)}
+.btn-primary:hover{opacity:.88}
+.btn-primary:disabled{opacity:.55;cursor:not-allowed}
+.auth-msg{font-size:13px;margin-top:.75rem;display:none;padding:9px 12px;border-radius:8px}
+.auth-msg.error{background:var(--red-light);color:var(--red)}
+.auth-msg.success{background:var(--green-light);color:var(--green)}
+.auth-links{display:flex;justify-content:flex-end;margin-top:-4px;margin-bottom:1rem}
+.auth-links a{font-size:12.5px;font-weight:600}
+
+/* ── DASHBOARD PLACEHOLDER ── */
+#app{display:none;min-height:100vh}
+.app-header{background:var(--white);border-bottom:.5px solid var(--border);padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between}
+.app-header-brand{display:flex;align-items:center;gap:10px}
+.app-header-brand .bmark{width:32px;height:32px;background:var(--red);border-radius:8px;display:flex;align-items:center;justify-content:center}
+.app-header-brand .bmark.biz{background:var(--green)}
+.app-header-brand .bmark svg{width:17px;height:17px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.app-header-brand span{font-size:17px;font-weight:800}
+.app-header-user{display:flex;align-items:center;gap:10px}
+.app-header-user .uavatar{width:34px;height:34px;border-radius:50%;background:var(--red-light);color:var(--red);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.app-header-user .uavatar.biz{background:var(--green-light);color:var(--green)}
+.app-header-user .uname{font-size:14px;font-weight:600}
+.app-header-user .utype{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px}
+.btn-so{background:var(--surface);border:.5px solid var(--border-strong);font-size:13px;color:var(--text-muted);padding:7px 14px;border-radius:8px;font-weight:500}
+.btn-so:hover{background:var(--surface-2);color:var(--text)}
+.placeholder-body{padding:3rem 1.5rem;text-align:center;max-width:560px;margin:0 auto}
+.placeholder-body .pico{font-size:48px;margin-bottom:1rem}
+.placeholder-body h2{font-size:22px;font-weight:800;margin-bottom:.5rem}
+.placeholder-body p{font-size:14px;color:var(--text-muted);line-height:1.6}
+.placeholder-badge{display:inline-block;background:var(--amber-light);color:var(--amber);font-size:12px;font-weight:600;padding:5px 14px;border-radius:99px;margin-top:1.25rem}
+
+.toast{position:fixed;bottom:1.5rem;right:1rem;background:var(--text);color:#fff;padding:10px 18px;border-radius:10px;font-size:14px;font-weight:500;transform:translateY(80px);opacity:0;transition:all .3s;z-index:300;box-shadow:var(--shadow-md);max-width:320px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{background:var(--green)}.toast.error{background:var(--red)}
+</style>
+</head>
+<body>
+
+<!-- LANDING CHOICE -->
+<div id="choice-screen">
+  <div class="choice-wrap">
+    <div class="choice-brand">
+      <div class="bmark"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+      <h1>Spendly</h1>
+      <p>How would you like to continue?</p>
+    </div>
+    <div class="choice-cards">
+      <button class="choice-card" onclick="goAuth('individual')">
+        <div class="choice-icon individual"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+        <div class="choice-text"><h3>Individual</h3><p>Track personal income, expenses, savings & debt</p></div>
+        <div class="choice-arrow"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </button>
+      <button class="choice-card" onclick="goAuth('business')">
+        <div class="choice-icon business"><svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l8-4 8 4v14M9 9h1m4 0h1m-6 4h1m4 0h1m-6 4h1m4 0h1"/></svg></div>
+        <div class="choice-text"><h3>Business</h3><p>Manage sales, inventory, credit & business finances</p></div>
+        <div class="choice-arrow"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- INDIVIDUAL AUTH -->
+<div class="auth-screen" id="auth-individual">
+  <div class="auth-wrap">
+    <div class="auth-back" onclick="backToChoice()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>Back</div>
+    <div class="auth-brand">
+      <div class="bmark ind"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+      <h1>Individual account</h1>
+      <p>Track your personal finances</p>
+    </div>
+    <div class="auth-card">
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="ind-tab-login" onclick="setAuthTab('individual','login')">Sign in</button>
+        <button class="auth-tab" id="ind-tab-signup" onclick="setAuthTab('individual','signup')">Create account</button>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <div id="ind-login-form">
+        <div class="field"><label>Username</label><input id="ind-login-username" type="text" placeholder="yourusername"/></div>
+        <div class="field"><label>Password</label><input id="ind-login-password" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')individualLogin()"/></div>
+        <div class="auth-links"><a href="#" onclick="showForgot('individual');return false;">Forgot password?</a></div>
+        <button class="btn-primary" id="ind-login-btn" onclick="individualLogin()">Sign in</button>
+        <div class="auth-msg" id="ind-login-msg"></div>
+      </div>
+
+      <!-- SIGNUP FORM -->
+      <div id="ind-signup-form" style="display:none">
+        <div class="field"><label>Username</label><input id="ind-signup-username" type="text" placeholder="Choose a username"/></div>
+        <div class="field"><label>Email address</label><input id="ind-signup-email" type="email" placeholder="you@example.com"/><div class="hint">Used only for account recovery</div></div>
+        <div class="field"><label>Password</label><input id="ind-signup-password" type="password" placeholder="••••••••"/></div>
+        <button class="btn-primary" id="ind-signup-btn" onclick="individualSignup()">Create account</button>
+        <div class="auth-msg" id="ind-signup-msg"></div>
+      </div>
+
+      <!-- FORGOT PASSWORD FORM -->
+      <div id="ind-forgot-form" style="display:none">
+        <div class="field"><label>Email address</label><input id="ind-forgot-email" type="email" placeholder="you@example.com"/><div class="hint">We'll send a password reset link to your email</div></div>
+        <button class="btn-primary" id="ind-forgot-btn" onclick="sendResetLink('individual')">Send reset link</button>
+        <div class="auth-msg" id="ind-forgot-msg"></div>
+        <div class="auth-links" style="justify-content:center;margin-top:1rem"><a href="#" onclick="hideForgot('individual');return false;">Back to sign in</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BUSINESS AUTH -->
+<div class="auth-screen" id="auth-business">
+  <div class="auth-wrap">
+    <div class="auth-back" onclick="backToChoice()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>Back</div>
+    <div class="auth-brand">
+      <div class="bmark biz"><svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l8-4 8 4v14M9 9h1m4 0h1m-6 4h1m4 0h1m-6 4h1m4 0h1"/></svg></div>
+      <h1>Business account</h1>
+      <p>Manage your business finances</p>
+    </div>
+    <div class="auth-card">
+      <div class="auth-tabs">
+        <button class="auth-tab active biz-active" id="biz-tab-login" onclick="setAuthTab('business','login')">Sign in</button>
+        <button class="auth-tab" id="biz-tab-signup" onclick="setAuthTab('business','signup')">Register business</button>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <div id="biz-login-form">
+        <div class="field"><label>Username or business name</label><input id="biz-login-username" type="text" placeholder="Username or business name"/></div>
+        <div class="field"><label>Password</label><input id="biz-login-password" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')businessLogin()"/></div>
+        <div class="auth-links"><a href="#" onclick="showForgot('business');return false;">Forgot password?</a></div>
+        <button class="btn-primary biz" id="biz-login-btn" onclick="businessLogin()">Sign in</button>
+        <div class="auth-msg" id="biz-login-msg"></div>
+      </div>
+
+      <!-- SIGNUP FORM -->
+      <div id="biz-signup-form" style="display:none">
+        <div class="field"><label>Username or business name</label><input id="biz-signup-username" type="text" placeholder="Username or business name"/><div class="hint">This will be shown as your display name</div></div>
+        <div class="field"><label>Email address</label><input id="biz-signup-email" type="email" placeholder="business@example.com"/><div class="hint">Used only for account recovery</div></div>
+        <div class="field"><label>Password</label><input id="biz-signup-password" type="password" placeholder="••••••••"/></div>
+        <button class="btn-primary biz" id="biz-signup-btn" onclick="businessSignup()">Register business</button>
+        <div class="auth-msg" id="biz-signup-msg"></div>
+      </div>
+
+      <!-- FORGOT PASSWORD FORM -->
+      <div id="biz-forgot-form" style="display:none">
+        <div class="field"><label>Email address</label><input id="biz-forgot-email" type="email" placeholder="business@example.com"/><div class="hint">We'll send a password reset link to your email</div></div>
+        <button class="btn-primary biz" id="biz-forgot-btn" onclick="sendResetLink('business')">Send reset link</button>
+        <div class="auth-msg" id="biz-forgot-msg"></div>
+        <div class="auth-links" style="justify-content:center;margin-top:1rem"><a href="#" onclick="hideForgot('business');return false;">Back to sign in</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- APP (placeholder dashboards — filled in by later phases) -->
+<div id="app">
+  <header class="app-header">
+    <div class="app-header-brand">
+      <div class="bmark" id="app-bmark"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+      <span>Spendly</span>
+    </div>
+    <div class="app-header-user">
+      <div style="text-align:right">
+        <div class="uname" id="app-uname">—</div>
+        <div class="utype" id="app-utype">—</div>
+      </div>
+      <div class="uavatar" id="app-uavatar">U</div>
+      <button class="btn-so" onclick="doSignOut()">Sign out</button>
+    </div>
+  </header>
+  <div class="placeholder-body">
+    <div class="pico" id="placeholder-icon">🎉</div>
+    <h2 id="placeholder-title">You're signed in</h2>
+    <p id="placeholder-text">This is Phase 1 — authentication, account types, and routing are now working. The full dashboard (transactions, analytics, savings, debt, inventory, reports) will be built in the next phases and will appear here.</p>
+    <div class="placeholder-badge">Phase 1 of 5 complete</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+const SB_URL  = 'https://extsapghgbvlbyhrfmea.supabase.co';
+const SB_ANON = 'sb_publishable_2YtBzPNMUFZ0CGbRLRrQAg_KoE8qNjF';
+
+const sb = createClient(SB_URL, SB_ANON);
+let user = null, profile = null;
+
+/* ---------- NAVIGATION BETWEEN SCREENS ---------- */
+function showScreen(id){
+  document.getElementById('choice-screen').style.display='none';
+  document.getElementById('auth-individual').style.display='none';
+  document.getElementById('auth-business').style.display='none';
+  document.getElementById('app').style.display='none';
+  const el=document.getElementById(id);
+  if(el) el.style.display = (id==='app') ? 'block' : 'flex';
+}
+
+function goAuth(type){
+  showScreen('auth-'+type);
+}
+function backToChoice(){
+  showScreen('choice-screen');
+}
+
+window.goAuth = goAuth;
+window.backToChoice = backToChoice;
+
+/* ---------- TAB SWITCHING ---------- */
+function setAuthTab(side, mode){
+  const prefix = side==='individual' ? 'ind' : 'biz';
+  document.getElementById(prefix+'-tab-login').classList.toggle('active', mode==='login');
+  document.getElementById(prefix+'-tab-signup').classList.toggle('active', mode==='signup');
+  if(side==='business'){
+    document.getElementById('biz-tab-login').classList.toggle('biz-active', mode==='login');
+    document.getElementById('biz-tab-signup').classList.toggle('biz-active', mode==='signup');
+  }
+  document.getElementById(prefix+'-login-form').style.display = mode==='login' ? 'block' : 'none';
+  document.getElementById(prefix+'-signup-form').style.display = mode==='signup' ? 'block' : 'none';
+  document.getElementById(prefix+'-forgot-form').style.display = 'none';
+}
+window.setAuthTab = setAuthTab;
+
+function showForgot(side){
+  const prefix = side==='individual' ? 'ind' : 'biz';
+  document.getElementById(prefix+'-login-form').style.display='none';
+  document.getElementById(prefix+'-signup-form').style.display='none';
+  document.getElementById(prefix+'-forgot-form').style.display='block';
+}
+function hideForgot(side){
+  setAuthTab(side,'login');
+}
+window.showForgot = showForgot;
+window.hideForgot = hideForgot;
+
+/* ---------- HELPERS ---------- */
+function showMsg(id, msg, type){
+  const el = document.getElementById(id);
+  el.textContent = msg; el.className = 'auth-msg '+type; el.style.display='block';
+}
+function clearMsg(id){
+  document.getElementById(id).style.display='none';
+}
+function toast(msg,type=''){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className='toast'+(type?' '+type:''); el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),3000);
+}
+
+/* ---------- USERNAME -> EMAIL RESOLUTION ----------
+   Supabase Auth is email-based with no native username support.
+   We maintain a separate `username_lookup` table (username -> email)
+   that is publicly readable (but only insertable, never updatable by
+   clients), so the login screen can accept a username, resolve the
+   underlying email via this table, then authenticate normally through
+   Supabase's email/password sign-in. This works identically across
+   devices since it's a database lookup, not a local cache. */
+
+/* ---------- SIGNUP: INDIVIDUAL ---------- */
+async function individualSignup(){
+  const username = document.getElementById('ind-signup-username').value.trim();
+  const email = document.getElementById('ind-signup-email').value.trim();
+  const password = document.getElementById('ind-signup-password').value;
+  clearMsg('ind-signup-msg');
+  if(!username || username.length<3){ showMsg('ind-signup-msg','Username must be at least 3 characters.','error'); return; }
+  if(!email || !password){ showMsg('ind-signup-msg','Please fill in all fields.','error'); return; }
+  if(password.length<6){ showMsg('ind-signup-msg','Password must be at least 6 characters.','error'); return; }
+
+  const btn = document.getElementById('ind-signup-btn');
+  btn.disabled=true; btn.textContent='Creating account…';
+
+  const usernameKey = username.toLowerCase();
+
+  // Check username availability across the username_lookup table
+  const { data: existing } = await sb.from('username_lookup').select('username').eq('username', usernameKey).maybeSingle();
+  if(existing){
+    showMsg('ind-signup-msg','That username is already taken.','error');
+    btn.disabled=false; btn.textContent='Create account';
+    return;
+  }
+
+  const { data, error } = await sb.auth.signUp({ email, password });
+  if(error){
+    showMsg('ind-signup-msg', error.message, 'error');
+    btn.disabled=false; btn.textContent='Create account';
+    return;
+  }
+
+  const newUser = data.user;
+  if(newUser){
+    await sb.from('profiles').insert([{ id:newUser.id, account_type:'individual', username:usernameKey, display_name:username }]);
+    await sb.from('username_lookup').insert([{ username:usernameKey, email, account_type:'individual' }]);
+  }
+
+  btn.disabled=false; btn.textContent='Create account';
+
+  if(!data.session){
+    showMsg('ind-signup-msg','Account created! Check your email to confirm, then sign in.','success');
+  } else {
+    user=newUser; profile={account_type:'individual',username:usernameKey,display_name:username};
+    startApp();
+  }
+}
+window.individualSignup = individualSignup;
+
+/* ---------- SIGNUP: BUSINESS ---------- */
+async function businessSignup(){
+  const username = document.getElementById('biz-signup-username').value.trim();
+  const email = document.getElementById('biz-signup-email').value.trim();
+  const password = document.getElementById('biz-signup-password').value;
+  clearMsg('biz-signup-msg');
+  if(!username || username.length<3){ showMsg('biz-signup-msg','Username or business name must be at least 3 characters.','error'); return; }
+  if(!email || !password){ showMsg('biz-signup-msg','Please fill in all fields.','error'); return; }
+  if(password.length<6){ showMsg('biz-signup-msg','Password must be at least 6 characters.','error'); return; }
+
+  const btn = document.getElementById('biz-signup-btn');
+  btn.disabled=true; btn.textContent='Registering business…';
+
+  const usernameKey = username.toLowerCase();
+
+  const { data: existing } = await sb.from('username_lookup').select('username').eq('username', usernameKey).maybeSingle();
+  if(existing){
+    showMsg('biz-signup-msg','That username or business name is already taken.','error');
+    btn.disabled=false; btn.textContent='Register business';
+    return;
+  }
+
+  const { data, error } = await sb.auth.signUp({ email, password });
+  if(error){
+    showMsg('biz-signup-msg', error.message, 'error');
+    btn.disabled=false; btn.textContent='Register business';
+    return;
+  }
+
+  const newUser = data.user;
+  if(newUser){
+    await sb.from('profiles').insert([{ id:newUser.id, account_type:'business', username:usernameKey, display_name:username }]);
+    await sb.from('username_lookup').insert([{ username:usernameKey, email, account_type:'business' }]);
+  }
+
+  btn.disabled=false; btn.textContent='Register business';
+
+  if(!data.session){
+    showMsg('biz-signup-msg','Business account created! Check your email to confirm, then sign in.','success');
+  } else {
+    user=newUser; profile={account_type:'business',username:usernameKey,display_name:username};
+    startApp();
+  }
+}
+window.businessSignup = businessSignup;
+
+/* ---------- LOGIN: INDIVIDUAL ---------- */
+async function individualLogin(){
+  const username = document.getElementById('ind-login-username').value.trim().toLowerCase();
+  const password = document.getElementById('ind-login-password').value;
+  clearMsg('ind-login-msg');
+  if(!username || !password){ showMsg('ind-login-msg','Please enter your username and password.','error'); return; }
+
+  const btn = document.getElementById('ind-login-btn');
+  btn.disabled=true; btn.textContent='Signing in…';
+
+  const { data: lookup, error: lookupErr } = await sb.from('username_lookup').select('email,account_type').eq('username', username).eq('account_type','individual').maybeSingle();
+  if(lookupErr || !lookup){
+    showMsg('ind-login-msg','No individual account found with that username.','error');
+    btn.disabled=false; btn.textContent='Sign in';
+    return;
+  }
+
+  const { data, error } = await sb.auth.signInWithPassword({ email: lookup.email, password });
+  btn.disabled=false; btn.textContent='Sign in';
+  if(error){ showMsg('ind-login-msg', error.message, 'error'); return; }
+
+  user = data.user;
+  const { data: prof } = await sb.from('profiles').select('*').eq('id', user.id).single();
+  profile = prof;
+  startApp();
+}
+window.individualLogin = individualLogin;
+
+/* ---------- LOGIN: BUSINESS ---------- */
+async function businessLogin(){
+  const username = document.getElementById('biz-login-username').value.trim().toLowerCase();
+  const password = document.getElementById('biz-login-password').value;
+  clearMsg('biz-login-msg');
+  if(!username || !password){ showMsg('biz-login-msg','Please enter your username/business name and password.','error'); return; }
+
+  const btn = document.getElementById('biz-login-btn');
+  btn.disabled=true; btn.textContent='Signing in…';
+
+  const { data: lookup, error: lookupErr } = await sb.from('username_lookup').select('email,account_type').eq('username', username).eq('account_type','business').maybeSingle();
+  if(lookupErr || !lookup){
+    showMsg('biz-login-msg','No business account found with that username or business name.','error');
+    btn.disabled=false; btn.textContent='Sign in';
+    return;
+  }
+
+  const { data, error } = await sb.auth.signInWithPassword({ email: lookup.email, password });
+  btn.disabled=false; btn.textContent='Sign in';
+  if(error){ showMsg('biz-login-msg', error.message, 'error'); return; }
+
+  user = data.user;
+  const { data: prof } = await sb.from('profiles').select('*').eq('id', user.id).single();
+  profile = prof;
+  startApp();
+}
+window.businessLogin = businessLogin;
+
+/* ---------- FORGOT PASSWORD ---------- */
+async function sendResetLink(side){
+  const prefix = side==='individual' ? 'ind' : 'biz';
+  const email = document.getElementById(prefix+'-forgot-email').value.trim();
+  clearMsg(prefix+'-forgot-msg');
+  if(!email){ showMsg(prefix+'-forgot-msg','Please enter your email address.','error'); return; }
+
+  const btn = document.getElementById(prefix+'-forgot-btn');
+  btn.disabled=true; btn.textContent='Sending…';
+
+  const { error } = await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + window.location.pathname
+  });
+
+  btn.disabled=false; btn.textContent='Send reset link';
+
+  if(error){ showMsg(prefix+'-forgot-msg', error.message, 'error'); return; }
+  showMsg(prefix+'-forgot-msg','If an account exists with that email, a reset link has been sent. Check your inbox.','success');
+}
+window.sendResetLink = sendResetLink;
+
+/* ---------- APP START / ROUTING ---------- */
+async function startApp(){
+  showScreen('app');
+  const isBiz = profile.account_type === 'business';
+  document.getElementById('app-uname').textContent = profile.display_name;
+  document.getElementById('app-utype').textContent = isBiz ? 'Business account' : 'Individual account';
+  document.getElementById('app-uavatar').textContent = profile.display_name[0].toUpperCase();
+  document.getElementById('app-uavatar').className = 'uavatar' + (isBiz ? ' biz':'');
+  document.getElementById('app-bmark').className = 'bmark' + (isBiz ? ' biz':'');
+  document.getElementById('placeholder-icon').textContent = isBiz ? '🏪' : '👤';
+  document.getElementById('placeholder-title').textContent = isBiz
+    ? `Welcome, ${profile.display_name}`
+    : `Welcome, ${profile.display_name}`;
+  document.getElementById('placeholder-text').textContent = isBiz
+    ? 'You are signed into your business dashboard. Sales, inventory, credit tracking, business savings goals, and reports will appear here in upcoming phases.'
+    : 'You are signed into your individual dashboard. Transactions, analytics, savings & debt tracking will appear here in upcoming phases.';
+}
+
+async function doSignOut(){
+  await sb.auth.signOut();
+  user=null; profile=null;
+  location.reload();
+}
+window.doSignOut = doSignOut;
+
+/* ---------- BOOT ---------- */
+window.addEventListener('DOMContentLoaded', async ()=>{
+  showScreen('choice-screen');
+  const { data: { session } } = await sb.auth.getSession();
+  if(session){
+    user = session.user;
+    const { data: prof } = await sb.from('profiles').select('*').eq('id', user.id).single();
+    if(prof){ profile = prof; startApp(); }
+  }
+});
+</script>
+</body>
+</html>
